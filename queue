@@ -1,0 +1,90 @@
+#include <stdio.h>
+#include <stdlib.h>
+#define MaxSize 100
+#define OK 1
+#define ERROR 0	
+#define TRUE 1		
+#define FALSE 0
+#define OVERFLOW -2
+typedef int Status;
+typedef int ElemType;
+typedef int QElemType;
+#define MAXQSIZE 100
+typedef struct {
+	QElemType* base;//队列的基地址
+	int front;//队头指针
+	int rear;//队尾指针
+}SqQueue;
+Status InitQueue(SqQueue* Q) {
+	Q->base = (QElemType*)malloc(MAXQSIZE * sizeof(QElemType));
+	if (!Q->base) {
+		printf("Memory overflow!\n");
+		exit(OVERFLOW);
+	}
+	Q->front = Q->rear = 0;//队头和队尾指针初始化为0
+	return OK;
+}//初始化队列
+int QueueLength(SqQueue* Q) {
+	return (Q->rear - Q->front + MAXQSIZE) % MAXQSIZE;//队列长度
+}//求队列长度
+Status EnQueue(SqQueue* Q, QElemType e) {
+	if ((Q->rear + 1) % MAXQSIZE == Q->front) return ERROR;//队列满
+	Q->base[Q->rear] = e;//将e赋值给队尾
+	Q->rear = (Q->rear + 1) % MAXQSIZE;//队尾指针后移
+	return OK;
+}//入队
+Status DeQueue(SqQueue* Q, QElemType* e) {
+	if (Q->front == Q->rear) return ERROR;//队列空
+	*e = Q->base[Q->front];//将队头元素赋值给e
+	Q->front = (Q->front + 1) % MAXQSIZE;//队头指针后移
+	return OK;
+}//出队
+QElemType GetHead(SqQueue* Q, QElemType* e) {
+	if (Q->front == Q->rear) return ERROR;//队列空
+	*e = Q->base[Q->front];//将队头元素赋值给e
+	return OK;
+}//获取队头元素
+
+//链队列
+typedef struct Qnode {
+	QElemType data;	
+	struct Qnode* next;
+}Qnode, *QuenePtr;
+typedef struct {
+	QuenePtr front;//队头指针
+	QuenePtr rear;//队尾指针	
+}LinkQueue;
+Status InitQueue(LinkQueue* Q) {
+	Q->front = Q->rear = (QuenePtr)malloc(sizeof(Qnode));//分配一个结点
+	if (!Q->front) return OVERFLOW;//分配失败
+	Q->front->next = NULL;//队头结点的指针域置空
+	return OK;
+}//初始化链队列
+Status DestroyQueue(LinkQueue* Q) {
+	QuenePtr p = Q->front, q;
+	while (p) {
+		q = p;
+		p = p->next;//p指向下一个结点
+		free(q);//释放当前结点
+	}
+	Q->front = Q->rear = NULL;
+	return OK;
+}//销毁链队列
+Status EnQueue(LinkQueue* Q, QElemType e) {
+	QuenePtr s = (QuenePtr)malloc(sizeof(Qnode));//分配一个新结点
+	if (!s) return OVERFLOW;//分配失败
+	s->data = e;//将e赋值给新结点的数据域
+	s->next = NULL;//新结点的指针域置空
+	Q->rear->next = s;//将当前队尾结点的指针域指向新结点
+	Q->rear = s;//将rear指向新结点
+	return OK;
+}//入队
+Status DeQueue(LinkQueue* Q, QElemType* e) {
+	if (Q->front == Q->rear) return ERROR;//队列空
+	QuenePtr p = Q->front->next;//p指向第一个结点
+	*e = p->data;//将第一个结点的数据赋值给e
+	Q->front->next = p->next;//将头结点的指针域指向第二个结点
+	if (Q->rear == p) Q->rear = Q->front;//如果队列只有一个结点，更新rear指针
+	free(p);//释放第一个结点
+	return OK;
+}//出队
